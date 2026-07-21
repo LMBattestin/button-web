@@ -16,10 +16,10 @@ const COLORS = {
   brown: ['#d8ad83', '#8a5a2e', '#3f2712'],
 };
 
-const ERROR_MESSAGES = {
-  'bad signature': 'Código inválido.',
-  'malformed code': 'Não consegui ler esse código — confira se copiou tudo certinho.',
-  'expired code': 'Esse código expirou, gera um novo no app.',
+const ERROR_KEYS = {
+  'bad signature': 'errBadSig',
+  'malformed code': 'errMalformed',
+  'expired code': 'errExpired',
 };
 
 function formatTimer(ms) {
@@ -57,8 +57,16 @@ const openSubmit = document.getElementById('openSubmit');
 const cancelSubmit = document.getElementById('cancelSubmit');
 const confirmSubmit = document.getElementById('confirmSubmit');
 
-function setBoardStatus(text) {
-  boardStatus.textContent = text || '';
+// Tracks what the board/dialog are currently showing, so language switches
+// can re-render the right message without refetching or resubmitting.
+let boardStatusKey = 'loading';
+let dialogMsgState = null; // { key, tone }
+let lastLeaderboard = [];
+let isSubmitting = false;
+
+function setBoardStatus(key) {
+  boardStatusKey = key;
+  boardStatus.textContent = key ? t(key) : '';
 }
 
 function renderRow(entry) {
@@ -79,47 +87,51 @@ function renderRow(entry) {
 }
 
 function renderBoard(list) {
+  lastLeaderboard = list;
   if (!list.length) {
     board.innerHTML = '';
-    setBoardStatus('Ainda ninguém no ranking. Seja o primeiro a soltar o dedo!');
+    setBoardStatus('empty');
     return;
   }
-  setBoardStatus('');
+  setBoardStatus(null);
   board.innerHTML = list.slice(0, 100).map(renderRow).join('');
 }
 
 async function fetchLeaderboard() {
-  setBoardStatus('Carregando ranking...');
+  setBoardStatus('loading');
   try {
     const res = await fetch(`${API_BASE}/leaderboard`);
     if (!res.ok) throw new Error('request failed');
     const data = await res.json();
     renderBoard(data.leaderboard || []);
   } catch (err) {
-    setBoardStatus('Não foi possível carregar o ranking agora. Tente recarregar a página.');
+    setBoardStatus('loadError');
   }
 }
 
-function showDialogMsg(text, tone) {
-  dialogMsg.textContent = text;
+function showDialogMsg(key, tone) {
+  dialogMsgState = { key, tone };
+  dialogMsg.textContent = t(key);
   dialogMsg.dataset.tone = tone;
 }
 
 function resetDialog() {
   codeInput.value = '';
+  dialogMsgState = null;
   dialogMsg.textContent = '';
   delete dialogMsg.dataset.tone;
 }
 
-function setSubmitting(isSubmitting) {
-  confirmSubmit.disabled = isSubmitting;
-  confirmSubmit.textContent = isSubmitting ? 'Enviando...' : 'Enviar';
+function setSubmitting(submitting) {
+  isSubmitting = submitting;
+  confirmSubmit.disabled = submitting;
+  confirmSubmit.textContent = submitting ? t('sending') : t('send');
 }
 
 async function handleSubmit() {
   const code = codeInput.value.trim();
   if (!code) {
-    showDialogMsg('Cole o código antes de enviar.', 'error');
+    showDialogMsg('errEmptyCode', 'error');
     return;
   }
 
@@ -133,22 +145,30 @@ async function handleSubmit() {
     const data = await res.json().catch(() => ({}));
 
     if (res.status === 200 && data.ok && data.updated) {
-      showDialogMsg('Você entrou no ranking! 🎉', 'success');
+      showDialogMsg('success', 'success');
       await fetchLeaderboard();
       setTimeout(() => {
         dialog.close();
         resetDialog();
       }, 1500);
     } else if (res.status === 200 && data.ok) {
-      showDialogMsg('Você já tem um recorde melhor registrado.', 'info');
+      showDialogMsg('alreadyBetter', 'info');
     } else {
-      showDialogMsg(ERROR_MESSAGES[data.error] || 'Não foi possível enviar esse código. Tente novamente.', 'error');
+      showDialogMsg(ERROR_KEYS[data.error] || 'errGenericSubmit', 'error');
     }
   } catch (err) {
-    showDialogMsg('Erro de conexão. Tente novamente.', 'error');
+    showDialogMsg('errConnection', 'error');
   } finally {
     setSubmitting(false);
   }
+}
+
+// Called by i18n.js whenever the language changes, so dynamic text
+// (board status, dialog message, submit button label) stays in sync.
+function onLanguageChanged() {
+  if (boardStatusKey) boardStatus.textContent = t(boardStatusKey);
+  if (dialogMsgState) dialogMsg.textContent = t(dialogMsgState.key);
+  if (!isSubmitting) confirmSubmit.textContent = t('send');
 }
 
 openSubmit.addEventListener('click', () => {
