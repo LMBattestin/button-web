@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button — Ranking Global</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="hero">
+    <div class="wrap">
+      <p class="kicker">Global Leaderboard</p>
+      <h1>BUTTON <span>—</span><br>THE CHALLENGE</h1>
+      <p class="subtitle">Quanto mais tempo você segura, mais alto sobe.<br>Baixe o app e entre na disputa.</p>
+
+      <div class="store-buttons">
+        <a href="#" class="store-btn">📱 App Store</a>
+        <a href="#" class="store-btn">🤖 Google Play</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="board-section">
+      <div class="board-header">
+        <h2>Top 100</h2>
+        <button type="button" class="btn-primary" id="openSubmit">+ Incluir registro</button>
+      </div>
+
+      <p class="board-status" id="boardStatus">Carregando ranking...</p>
+      <div class="board" id="board"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Feito com <strong>♥</strong> para quem não larga o botão.</p>
+  </footer>
+
+  <dialog id="submitDialog" class="dialog">
+    <div class="dialog-inner">
+      <h3>Incluir seu recorde</h3>
+      <p class="dialog-hint">Cole aqui o código gerado pelo app depois da sua tentativa.</p>
+      <textarea id="codeInput" rows="4" placeholder="Cole o código aqui..."></textarea>
+      <p class="dialog-msg" id="dialogMsg"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" id="cancelSubmit">Cancelar</button>
+        <button type="button" class="btn-primary" id="confirmSubmit">Enviar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>
