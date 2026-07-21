@@ -165,6 +165,13 @@ function initLanguageSwitcher() {
   });
 
   langSearch.addEventListener('input', () => renderLangList(langSearch.value));
+
+  langDialog.addEventListener('click', (e) => {
+    const rect = langDialog.getBoundingClientRect();
+    const insideDialog = e.clientX >= rect.left && e.clientX <= rect.right
+      && e.clientY >= rect.top && e.clientY <= rect.bottom;
+    if (!insideDialog) langDialog.close();
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
