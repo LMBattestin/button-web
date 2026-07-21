@@ -92,7 +92,7 @@ function applyTranslations() {
   const meta = LANGUAGES.find((l) => l.code === currentLang);
   const langToggle = document.getElementById('langToggle');
   if (langToggle && meta) {
-    langToggle.textContent = `${meta.flag} ${meta.native}`;
+    langToggle.textContent = `${meta.flag} ${meta.code.toUpperCase()}`;
   }
 
   const langDialogTitle = document.getElementById('langDialogTitle');
